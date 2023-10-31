@@ -1,0 +1,25 @@
+-- Table: public.commit_history
+
+-- DROP TABLE IF EXISTS public.commit_history;
+
+CREATE TABLE IF NOT EXISTS public.commit_history
+(
+    id integer NOT NULL DEFAULT nextval('commit_history_id_seq'::regclass),
+    user_name character varying(255) COLLATE pg_catalog."default" NOT NULL,
+    branch_name character varying(255) COLLATE pg_catalog."default" NOT NULL,
+    commit_date date NOT NULL,
+    commit_id character varying(40) COLLATE pg_catalog."default" NOT NULL,
+    num_additions integer NOT NULL,
+    num_deletions integer NOT NULL,
+    project integer NOT NULL,
+    CONSTRAINT commit_history_pkey PRIMARY KEY (id),
+    CONSTRAINT fk_project FOREIGN KEY (project)
+        REFERENCES public.data (id) MATCH SIMPLE
+        ON UPDATE NO ACTION
+        ON DELETE CASCADE
+)
+
+TABLESPACE pg_default;
+
+ALTER TABLE IF EXISTS public.commit_history
+    OWNER to postgres;
