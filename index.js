@@ -55,11 +55,46 @@ app.listen(5000, () => {
 
 // Login Credentials
 
-// app.use("/login", (req, res) => {
-//   res.send({
-//     token: "test123",
-//   });
-// });
+/**
+ * @swagger
+ * /login:
+ *   post:
+ *     summary: Log in to the application
+ *     tags:
+ *       - Authentication
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               username:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Successful login
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 token:
+ *                   type: string
+ *       400:
+ *         description: Invalid credentials or missing input
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ */
+
+
 
 app.post("/login", async (req, res) => {
   try {
@@ -68,7 +103,7 @@ app.post("/login", async (req, res) => {
     console.log(email);
 
     if (!(email && password)) {
-      return res.status(400).send("All input is required");
+      return res.status(400).json({error:"All input is required"});
     }
 
     const query =
@@ -93,10 +128,11 @@ app.post("/login", async (req, res) => {
       return res.status(200).json({"token":token});
     }
 
-    return res.status(400).send("Invalid Credentials");
+    // return res.status(400).send({"error":"Invalid Credentials"});
+    return res.status(400).json({ error: "Invalid Credentials" })
   } catch (err) {
     console.error(err);
-    return res.status(500).send("Internal Server Error");
+    return res.status(500).json({error:"Internal Server Error"});
   }
 });
 
@@ -183,50 +219,9 @@ app.delete("/project/delete/", async (req, res) => {
   deleteUser(req, res);
 });
 
-// PUT endpoints for updating projects
 
-/**
- * @swagger
- * /project/insert:
- *   post:
- *     summary: Insert a project
- *     description: Insert a new project with a project name and link.
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               project:
- *                 type: string
- *               link:
- *                 type: string
- *     responses:
- *       200:
- *         description: Successful response with the added project.
- *       400:
- *         description: Bad request or link already exists.
- */
 
-/**
- * @swagger
- * /project/delete:
- *   delete:
- *     summary: Delete a project
- *     description: Delete a project by its ID.
- *     parameters:
- *       - in: query
- *         name: id
- *         schema:
- *           type: integer
- *           format: int64
- *         required: true
- *         description: ID of the project to be deleted.
- *     responses:
- *       200:
- *         description: Successful response with the ID of the deleted project.
- */
+
 
 /**
  * @swagger
