@@ -50,6 +50,42 @@ app.listen(5000, () => {
   console.log("Listening...");
 });
 
+
+// GET all projects for home page
+
+/**
+ * @swagger
+ * /projects:
+ *   get:
+ *     summary: Get all projects
+ *     description: Retrieve a list of projects from the database.
+ *     responses:
+ *       200:
+ *         description: Successful response with an array of projects.
+ *         content:
+ *           application/json:
+ *             example:
+ *               - id: 1
+ *                 project: Project 1
+ *                 link: https://github.com/project1.git
+ *               - id: 2
+ *                 project: Project 2
+ *                 link: https://github.com/project2.git
+ */
+
+async function getData() {
+  const query = "SELECT * FROM data";
+
+  const data = await pool.query(query);
+
+  return data.rows;
+}
+
+app.get("/projects", async (req, res) => {
+  const result = await getData();
+  res.send(result).status(200);
+});
+
 // POST endpoint to insert data
 
 /**
@@ -137,49 +173,6 @@ app.delete("/project/delete/", async (req, res) => {
 
 /**
  * @swagger
- * /project/insert:
- *   post:
- *     summary: Insert a project
- *     description: Insert a new project with a project name and link.
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               project:
- *                 type: string
- *               link:
- *                 type: string
- *     responses:
- *       200:
- *         description: Successful response with the added project.
- *       400:
- *         description: Bad request or link already exists.
- */
-
-/**
- * @swagger
- * /project/delete:
- *   delete:
- *     summary: Delete a project
- *     description: Delete a project by its ID.
- *     parameters:
- *       - in: query
- *         name: id
- *         schema:
- *           type: integer
- *           format: int64
- *         required: true
- *         description: ID of the project to be deleted.
- *     responses:
- *       200:
- *         description: Successful response with the ID of the deleted project.
- */
-
-/**
- * @swagger
  * /project/update:
  *   put:
  *     summary: Update a project
@@ -232,40 +225,7 @@ app.put("/project/update/", (req, res) => {
   );
 });
 
-// GET all projects for home page
 
-/**
- * @swagger
- * /projects:
- *   get:
- *     summary: Get all projects
- *     description: Retrieve a list of projects from the database.
- *     responses:
- *       200:
- *         description: Successful response with an array of projects.
- *         content:
- *           application/json:
- *             example:
- *               - id: 1
- *                 project: Project 1
- *                 link: https://github.com/project1.git
- *               - id: 2
- *                 project: Project 2
- *                 link: https://github.com/project2.git
- */
-
-async function getData() {
-  const query = "SELECT * FROM data";
-
-  const data = await pool.query(query);
-
-  return data.rows;
-}
-
-app.get("/projects", async (req, res) => {
-  const result = await getData();
-  res.send(result).status(200);
-});
 // GET for commit history details after date filter
 
 /**
@@ -366,6 +326,98 @@ async function getProjectDataUsingId(request) {
 
 app.get("/history/header/", async (req, res) => {
   const result = await getProjectDataUsingId(req);
-  console.log(result, "herre111");
   res.status(200).send(result);
 });
+
+/**
+ * @swagger
+ * /history/insert:
+ *   post:
+ *     summary: Insert commit history
+ *     description: Insert commit history data into the database.
+ *     tags:
+ *       - History
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               username:
+ *                 type: string
+ *               branch_name:
+ *                 type: string
+ *               commit_date:
+ *                 type: string
+ *                 format: date
+ *               commit_id:
+ *                 type: string
+ *               no_of_deletion:
+ *                 type: integer
+ *               no_of_addition:
+ *                 type: integer
+ *               project_id:
+ *                 type: integer
+ *     responses:
+ *       200:
+ *         description: Success message
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ *       243:
+ *         description: Project ID does not exist
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ */
+
+
+app.post("/history/insert", (req, res) => {
+  const username = req.body.username;
+  const branch_name = req.body.branch_name;
+  const commit_date = req.body.commit_date;
+  const commit_id = req.body.commit_id;
+  const no_of_deletion = req.body.no_of_deletion;
+  const no_of_addition = req.body.no_of_addition;
+  const project_id = req.body.project_id;
+
+  pool.query(
+    `INSERT INTO commit_history (project, user_name, branch_name, commit_date, commit_id, num_additions, num_deletions)
+    VALUES ($1, $2, $3, $4, $5, $6, $7);`,
+    [
+      project_id,
+      username,
+      branch_name,
+      commit_date,
+      commit_id,
+      no_of_addition,
+      no_of_deletion,
+    ],
+    (err, result) => {
+      if (err) {
+        if (err.constraint === "fk_project") {
+          return res.status(243).json({ error: "project_id does not exist" });
+        } else {
+          return res.status(500).json({ error: err.message });
+        }
+      } else {
+        res.status(200).json({ message: "added", data: result.rows[0] });
+      }
+    }
+  );
+});
+
+
+
+
+
